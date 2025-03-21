@@ -44,14 +44,14 @@ Follow the steps below to set up the project on your local machine:
 
 
 /QA-Scraper
- │
+ 
  ├── static/                 
  │    ├── script.js          
  │    ├── style.css          
- │
+ 
  ├── templates/              
  │    ├── index.html         
- │
+ 
  ├── content_db.json         
  ├── LICENSE                 
  ├── README.md               
