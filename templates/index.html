@@ -1,0 +1,186 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>AI Q&A Tool</title>
+    <style>
+        body {
+            font-family: Arial, sans-serif;
+            background-color: #f4f4f9;
+            margin: 0;
+            padding: 0;
+            color: #333;
+        }
+        .container {
+            max-width: 900px;
+            margin: 50px auto;
+            background: #fff;
+            padding: 30px;
+            box-shadow: 0 0 15px rgba(0, 0, 0, 0.1);
+            border-radius: 10px;
+        }
+        h1, h2 {
+            text-align: center;
+            color: #4CAF50;
+        }
+        label {
+            font-weight: bold;
+        }
+        input, textarea, button {
+            width: 100%;
+            padding: 12px;
+            margin: 10px 0;
+            border: 1px solid #ccc;
+            border-radius: 5px;
+            box-sizing: border-box;
+        }
+        button {
+            background: #4CAF50;
+            color: #fff;
+            border: none;
+            cursor: pointer;
+        }
+        button:hover {
+            background: #45a049;
+        }
+        .result {
+            margin-top: 20px;
+            padding: 15px;
+            background: #f9f9f9;
+            border: 1px solid #ddd;
+            border-radius: 5px;
+            word-wrap: break-word;
+        }
+        .error {
+            color: red;
+        }
+        footer {
+            text-align: center;
+            margin-top: 30px;
+            font-size: 14px;
+            color: #777;
+        }
+        @media (max-width: 768px) {
+            .container {
+                width: 95%;
+                margin: 20px auto;
+            }
+        }
+        pre {
+            white-space: pre-wrap;
+            word-wrap: break-word;
+            background: #f1f1f1;
+            padding: 10px;
+            border-radius: 5px;
+            overflow: auto;
+        }
+    </style>
+</head>
+<body>
+
+<div class="container">
+    <h1>AI-Powered Q&A Tool</h1>
+
+    <h2>🛠️ Ingest URLs</h2>
+    <form id="ingest-form">
+        <label for="urls">Enter URLs (comma-separated):</label>
+        <input type="text" id="urls" placeholder="https://example.com, https://another.com" required>
+        <button type="submit">Ingest</button>
+    </form>
+    
+    <div id="ingest-result" class="result"></div>
+
+    <h2>💬 Ask a Question</h2>
+    <form id="ask-form">
+        <label for="question">Enter Your Question:</label>
+        <input type="text" id="question" placeholder="What is AI?" required>
+        <button type="submit">Ask</button>
+    </form>
+    
+    <div id="ask-result" class="result"></div>
+</div>
+
+<footer>Made with ❤️ by Shilp</footer>
+
+<script>
+    const ingestForm = document.getElementById("ingest-form");
+    const askForm = document.getElementById("ask-form");
+    const ingestResult = document.getElementById("ingest-result");
+    const askResult = document.getElementById("ask-result");
+
+    // ✅ Updated Ingest Form with Display Fix
+    ingestForm.addEventListener("submit", async (e) => {
+        e.preventDefault();
+        const urls = document.getElementById("urls").value.split(",").map(url => url.trim());
+
+        ingestResult.innerHTML = "⏳ Ingesting URLs...";
+
+        try {
+            const response = await fetch("/ingest", {
+                method: "POST",
+                headers: { "Content-Type": "application/json" },
+                body: JSON.stringify({ urls })
+            });
+
+            if (!response.ok) {
+                throw new Error(`Failed to ingest URLs: ${response.status}`);
+            }
+
+            const data = await response.json();
+
+            // ✅ Display the ingested content in a readable format
+            if (data.content) {
+                let contentHTML = `<h3>📝 Ingested Content:</h3>`;
+                for (const [url, content] of Object.entries(data.content)) {
+                    contentHTML += `
+                        <div>
+                            <p><strong>URL:</strong> <a href="${url}" target="_blank">${url}</a></p>
+                            <pre>${content}</pre>
+                        </div>
+                        <hr>`;
+                }
+
+                ingestResult.innerHTML = `
+                    <strong>Status:</strong> ${data.message} <br>
+                    ✅ <strong>FAISS:</strong> ${data.faiss_status} <br>
+                    ${contentHTML}
+                `;
+            } else {
+                ingestResult.innerHTML = `<strong>Status:</strong> ${data.message} <br> ❌ No content ingested.`;
+            }
+        } catch (error) {
+            console.error("Error:", error);
+            ingestResult.innerHTML = `<div class="error">❌ Error: ${error.message}</div>`;
+        }
+    });
+
+    // ✅ Ask Form Handling
+    askForm.addEventListener("submit", async (e) => {
+        e.preventDefault();
+        const question = document.getElementById("question").value;
+
+        askResult.innerHTML = "⏳ Fetching answer...";
+
+        try {
+            const response = await fetch("/ask", {
+                method: "POST",
+                headers: { "Content-Type": "application/json" },
+                body: JSON.stringify({ question })
+            });
+
+            const data = await response.json();
+
+            askResult.innerHTML = `
+                <strong>Question:</strong> ${data.question} <br>
+                ✅ <strong>Answer:</strong> ${data.answer}
+            `;
+        } catch (error) {
+            console.error("Error:", error);
+            askResult.innerHTML = `<div class="error">❌ Error fetching answer.</div>`;
+        }
+    });
+</script>
+
+</body>
+</html>
